@@ -29,7 +29,7 @@ jobs:
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$(gh run view "$SOURCE_RUN" --json conclusion --jq .conclusion)" == success ]]
           SOURCE_SHA=$(gh run view "$SOURCE_RUN" --json headSha --jq .headSha)
-          RELEASE_TARGET=$(gh api "repos/$GH_REPO/releases/tags/$RELEASE_TAG" --jq .target_commitish)
+          RELEASE_TARGET=$(gh release view "$RELEASE_TAG" --json targetCommitish --jq .targetCommitish)
           [[ "$SOURCE_SHA" == "$RELEASE_TARGET" ]]
           gh run download "$SOURCE_RUN" --name windows-x64 --dir incoming
           (cd incoming; sha256sum --check "XhsBoard-Windows-x64-$RELEASE_TAG.zip.sha256")
