@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>小红书 · 最近文章</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main class="board">
+  <header>
+    <div class="drag-area pywebview-drag-region" aria-hidden="true"></div>
+    <div class="brand"><span class="brand-mark">红</span><span>创作看板</span></div>
+    <div class="controls">
+      <button id="refresh" title="立即刷新" aria-label="立即刷新"><svg viewBox="0 0 24 24"><path d="M19 8a8 8 0 1 0 1 8M19 3v5h-5"/></svg></button>
+      <button id="pin" title="始终置顶" aria-label="始终置顶" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8 3h8m-7 0v6l-3 4v2h12v-2l-3-4V3m-3 12v6"/></svg></button>
+      <button id="settings" title="看板设置" aria-label="看板设置"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h14"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg></button>
+      <button id="hide" title="隐藏到托盘" aria-label="隐藏到托盘"><svg viewBox="0 0 24 24"><path d="m7 7 10 10M17 7 7 17"/></svg></button>
+    </div>
+  </header>
+  <div class="section-head"><h1>最近文章</h1><span id="count">最近 5 篇</span></div>
+  <section id="notes" aria-label="最近文章数据"></section>
+  <section id="empty" class="empty">
+    <span class="empty-symbol">↗</span>
+    <h2>让创作进展留在桌面</h2>
+    <p id="empty-text">登录小红书创作后台后，<br>最近文章的数据会显示在这里。</p>
+    <button class="primary" id="empty-login">登录创作后台</button>
+  </section>
+  <footer>
+    <div class="status-line"><span class="status-dot" id="dot"></span><span id="status" role="status">正在启动</span><button id="login">打开后台</button></div>
+    <div class="time-line"><span id="time">尚未同步</span><span id="hint">每 15 分钟更新</span></div>
+  </footer>
+</main>
+<dialog id="options">
+  <div class="dialog-head"><h2>看板设置</h2><button id="close-options" aria-label="关闭设置">×</button></div>
+  <label class="option"><span>主题<small>透明主题让文字直接浮在桌面上</small></span><select id="opt-theme"><option value="glass">玻璃</option><option value="transparent">透明</option></select></label>
+  <label class="option"><span>始终置顶<small>显示在其他窗口上方</small></span><input id="opt-pin" type="checkbox"></label>
+  <label class="option"><span>鼠标穿透<small>开启后，在托盘菜单中关闭</small></span><input id="opt-pass" type="checkbox"></label>
+  <label class="option"><span>开机启动<small>登录 Windows 后显示卡片</small></span><input id="opt-start" type="checkbox"></label>
+  <p class="local-note">登录状态和文章数据仅保存在本机。</p>
+</dialog>
+<script src="/app.js"></script>
+</body>
+</html>

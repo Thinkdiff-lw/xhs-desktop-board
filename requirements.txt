@@ -1,0 +1,6 @@
+pywebview==6.2.1
+pythonnet==3.1.0
+pystray==0.19.5
+Pillow==12.2.0
+comtypes==1.4.16
+pyinstaller==6.21.0
