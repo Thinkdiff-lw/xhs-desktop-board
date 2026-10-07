@@ -23,6 +23,7 @@ final class ActionButton:NSButton {
 }
 final class CardPanel:NSPanel {override var canBecomeKey:Bool {true};override var canBecomeMain:Bool {false}}
 final class HeaderView:NSView {override var isFlipped:Bool {true};override func mouseDown(with event:NSEvent){window?.performDrag(with:event)}}
+final class NoteDocument:NSView {override var isFlipped:Bool {true}}
 final class NoteRow:NSView {
     let note:Note;var transparent:Bool
     override var isFlipped:Bool {true}
@@ -47,7 +48,7 @@ final class NoteRow:NSView {
 }
 final class CardView:NSView {
     unowned let board:Board
-    let header = HeaderView(), scroll = NSScrollView(), document = NSView()
+    let header = HeaderView(), scroll = NSScrollView(), document = NoteDocument()
     var buttons:[ActionButton] = [], login:ActionButton!
     override var isFlipped:Bool {true}
     init(board:Board) {
@@ -79,7 +80,7 @@ final class CardView:NSView {
     func layoutNotes() {
         let rowHeight:CGFloat = bounds.width >= 600 ? 56 : 71
         document.frame = NSRect(x:0,y:0,width:scroll.contentSize.width,height:max(scroll.contentSize.height,CGFloat(document.subviews.count)*rowHeight))
-        for (index,row) in document.subviews.enumerated(){row.frame = NSRect(x:0,y:document.bounds.height-CGFloat(index+1)*rowHeight,width:document.bounds.width,height:rowHeight);row.needsDisplay = true}
+        for (index,row) in document.subviews.enumerated(){row.frame = NSRect(x:0,y:CGFloat(index)*rowHeight,width:document.bounds.width,height:rowHeight);row.needsDisplay = true}
     }
     override func draw(_ dirtyRect:NSRect) {
         let w = bounds.width,h = bounds.height,transparent = board.preferences.theme == "transparent"

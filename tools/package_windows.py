@@ -36,4 +36,4 @@ with ZipFile(args.output) as archive:
     assert set(archive.namelist()) == {name for _, name in entries}
 digest = hashlib.sha256(args.output.read_bytes()).hexdigest()
 args.output.with_suffix(args.output.suffix + ".sha256").write_text(digest + "  " + args.output.name + "\n", encoding="ascii")
-print("Checked Windows package: " + ", ".join(name for _, name in entries))
+print(f"Checked Windows package: {len(entries)} allowlisted files")
