@@ -21,6 +21,8 @@ using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.8", FrameworkDisplayName=".NET Framework 4.8")]
+[assembly: System.Reflection.AssemblyVersion("1.0.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.0.1.0")]
 
 namespace XhsNative {
     // Soft text shadows are recorded as static vector drawings, avoiding a
@@ -109,6 +111,17 @@ namespace XhsNative {
             return new Rect(transform.Transform(new Point(area.Left,area.Top)),transform.Transform(new Point(area.Right,area.Bottom)));
         }
     }
+    class BoardApplication : Application {
+        protected override void OnSessionEnding(SessionEndingCancelEventArgs e) {
+            // A system shutdown is not a user request to hide the card.
+            var card=MainWindow as Card;if(card!=null)card.PrepareForShutdown();
+            base.OnSessionEnding(e);
+        }
+        protected override void OnExit(ExitEventArgs e) {
+            var card=MainWindow as Card;if(card!=null)card.PrepareForShutdown();
+            base.OnExit(e);
+        }
+    }
     class Card : Window {
         readonly string directory, identity, baseDir;
         readonly bool preview, noSync, selfTest;
@@ -163,11 +176,14 @@ namespace XhsNative {
             PreviewMouseLeftButtonDown+=BeginResize;
             MouseLeave+=delegate { Cursor=Cursors.Arrow; };
             KeyDown+=delegate(object sender,KeyEventArgs e) { if(e.Key==Key.Escape) HideCard(); if(e.Key==Key.F5) Refresh(); };
-            Closing+=delegate(object sender,System.ComponentModel.CancelEventArgs e) { if(!quitting){e.Cancel=true;HideCard();} };
+            Closing+=delegate(object sender,System.ComponentModel.CancelEventArgs e) {
+                if(!quitting){e.Cancel=true;Dispatcher.BeginInvoke(new Action(delegate{if(!quitting)HideCard();}));}
+            };
             SourceInitialized+=delegate { sourceReady=true; ApplyNativeStyle(); };
             Loaded+=delegate {
                 ClampPosition(); SetupTray(); WriteDiagnostics();
                 if(!preview && !Json.B(settings,"visible",true)) Hide();
+                UpdateTray();
                 if(selfTest) BeginSelfTest(); else if(!noSync) StartWorker(!File.Exists(Path.Combine(directory,"snapshot.json")));
                 if(!selfTest && Environment.GetCommandLineArgs().Contains("--settings"))OpenSettings();
             };
@@ -356,8 +372,9 @@ namespace XhsNative {
             settings["size"]=new double[]{Width,Height};settings["position"]=new double[]{Left,Top};
             try{Json.Write(Path.Combine(directory,"settings.json"),settings);}catch(Exception e){message="设置保存失败："+e.Message;RenderStatus();}
         }
-        public void ShowCard() { settings["visible"]=true;Show();ClampPosition();if(!Json.B(settings,"click_through"))Activate();ApplyNativeStyle();SaveSettings(); }
-        void HideCard(){settings["visible"]=false;Hide();SaveSettings();}
+        public void ShowCard() { if(quitting)return;settings["visible"]=true;WindowState=WindowState.Normal;Show();ClampPosition();if(!Json.B(settings,"click_through"))Activate();ApplyNativeStyle();SaveSettings();UpdateTray();WriteDiagnostics(); }
+        void HideCard(){if(quitting)return;settings["visible"]=false;Hide();SaveSettings();UpdateTray();WriteDiagnostics();}
+        void ToggleCard(){if(Json.B(settings,"visible",true))HideCard();else ShowCard();}
         void SetupTray() {
             tray=new Forms.NotifyIcon{Text="小红书创作看板",Visible=true};
             string icon=Path.Combine(baseDir,"icon.ico");tray.Icon=File.Exists(icon)?new System.Drawing.Icon(icon):System.Drawing.SystemIcons.Application;
@@ -366,7 +383,7 @@ namespace XhsNative {
         Forms.ToolStripMenuItem Item(string text,Action action,bool check=false) { var item=new Forms.ToolStripMenuItem(text){Checked=check};item.Click+=delegate{Dispatcher.BeginInvoke(action);};return item; }
         void UpdateTray() {
             if(tray==null)return;var old=tray.ContextMenuStrip;var menu=new Forms.ContextMenuStrip();
-            menu.Items.Add(Item("显示桌面看板",ShowCard));menu.Items.Add(Item("隐藏桌面看板",HideCard));menu.Items.Add(Item("立即刷新",Refresh));menu.Items.Add(Item("打开创作后台 / 重新登录",delegate{StartWorker(true);}));menu.Items.Add(new Forms.ToolStripSeparator());
+            menu.Items.Add(Item("显示桌面看板",ToggleCard,Json.B(settings,"visible",true)));menu.Items.Add(Item("立即刷新",Refresh));menu.Items.Add(Item("打开创作后台 / 重新登录",delegate{StartWorker(true);}));menu.Items.Add(new Forms.ToolStripSeparator());
             var themes=new Forms.ToolStripMenuItem("主题");themes.DropDownItems.Add(Item("玻璃",delegate{SetOption("theme","glass");},!Transparent));themes.DropDownItems.Add(Item("透明",delegate{SetOption("theme","transparent");},Transparent));menu.Items.Add(themes);
             var count=new Forms.ToolStripMenuItem("显示文章数量");foreach(int number in new[]{1,3,5,10,20,50}){int n=number;count.DropDownItems.Add(Item(n+" 篇",delegate{SetCount(n);},Count==n));}count.DropDownItems.Add(Item("自定义…",OpenSettings));menu.Items.Add(count);
             menu.Items.Add(Item("始终置顶",delegate{SetOption("on_top",!Topmost);},Topmost));menu.Items.Add(Item("鼠标穿透",delegate{SetOption("click_through",!Json.B(settings,"click_through"));},Json.B(settings,"click_through")));menu.Items.Add(Item("看板设置",OpenSettings));menu.Items.Add(new Forms.ToolStripSeparator());menu.Items.Add(Item("退出",Exit));
@@ -444,9 +461,13 @@ namespace XhsNative {
             };
             timer.Start();
         }
-        public void Exit() {
-            if(quitting)return;quitting=true;SaveSettings();Signal("Stop");schedule.Stop();saveTimer.Stop();fileTimer.Stop();files.Dispose();if(tray!=null){tray.Visible=false;tray.Dispose();}Close();Application.Current.Shutdown();
+        public void PrepareForShutdown() {
+            if(quitting)return;quitting=true;
+            // Persist the user's last show/hide choice before windows disappear.
+            saveTimer.Stop();fileTimer.Stop();schedule.Stop();SaveSettings();Signal("Stop");files.Dispose();
+            if(tray!=null){tray.Visible=false;tray.Dispose();}
         }
+        public void Exit() { PrepareForShutdown();Application.Current.Shutdown(); }
     }
     // The settings panel is native WPF too: no browser or continuously animated
     // blur surface is needed for a rounded, translucent desktop card.
@@ -581,7 +602,7 @@ namespace XhsNative {
                     // This card is static between syncs; avoid keeping a D3D device
                     // and GPU buffers alive solely for text and a translucent panel.
                     RenderOptions.ProcessRenderMode=args.Contains("--hardware-render")?RenderMode.Default:RenderMode.SoftwareOnly;
-                    var app=new Application{ShutdownMode=ShutdownMode.OnExplicitShutdown};var card=new Card(dir,id,preview,noSync,qa);app.MainWindow=card;
+                    var app=new BoardApplication{ShutdownMode=ShutdownMode.OnExplicitShutdown};var card=new Card(dir,id,preview,noSync,qa);app.MainWindow=card;
                     var listener=new Thread(delegate(){while(true){activate.WaitOne();try{card.Dispatcher.BeginInvoke(new Action(card.ShowCard));}catch{return;}}});listener.IsBackground=true;listener.Start();app.Run(card);return 0;
                 }catch(Exception e){Directory.CreateDirectory(dir);File.AppendAllText(Path.Combine(dir,"native-error.log"),DateTime.Now+" "+e+Environment.NewLine);Forms.MessageBox.Show("看板启动失败，请查看 data/native-error.log。","小红书创作看板");return 1;}
             }

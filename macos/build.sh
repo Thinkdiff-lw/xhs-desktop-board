@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-VERSION=1.0.0
+VERSION=$(tr -d '\r\n' < VERSION)
 BUILD_DIR="dist/macos-$(date +%Y%m%d-%H%M%S)-$(uuidgen)"
 APP="$BUILD_DIR/XhsBoard.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$BUILD_DIR/AppIcon.iconset"

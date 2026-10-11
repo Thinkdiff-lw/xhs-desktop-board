@@ -139,8 +139,8 @@ final class Board:NSObject,NSApplicationDelegate,NSWindowDelegate {
     func queueSave(){saveTask?.cancel();let task = DispatchWorkItem{[weak self] in self?.save()};saveTask = task;DispatchQueue.main.asyncAfter(deadline:.now()+0.6,execute:task)}
     func windowDidMove(_ notification:Notification){queueSave()}
     func windowDidResize(_ notification:Notification){view.needsLayout = true;queueSave()}
-    func show(){preferences.visible = true;clamp();window.orderFrontRegardless();if !preferences.click_through {window.makeKey();NSApp.activate(ignoringOtherApps:true)};save()}
-    func hide(){preferences.visible = false;window.orderOut(nil);save()}
+    func show(){preferences.visible = true;clamp();window.orderFrontRegardless();if !preferences.click_through {window.makeKey();NSApp.activate(ignoringOtherApps:true)};save();makeMenu()}
+    func hide(){preferences.visible = false;window.orderOut(nil);save();makeMenu()}
     func togglePin(){preferences.on_top.toggle();apply();save()}
     func openSettings(){if let settings = settings {settings.showWindow(nil);settings.window?.makeKeyAndOrderFront(nil);return};settings = SettingsController(board:self);settings?.showWindow(nil);settings?.window?.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true)}
     func sync(login:Bool = false) {
@@ -175,11 +175,11 @@ final class Board:NSObject,NSApplicationDelegate,NSWindowDelegate {
     func makeMenu() {
         guard item != nil else {return};let menu = NSMenu()
         func entry(_ title:String,_ action:String,_ tag:Int = 0,_ checked:Bool = false)->NSMenuItem {let e = NSMenuItem(title:title,action:NSSelectorFromString(action),keyEquivalent:"");e.target = self;e.tag = tag;e.state = checked ? .on : .off;return e}
-        menu.addItem(entry("显示看板","menuShow:"));menu.addItem(entry("隐藏看板","menuHide:"));menu.addItem(entry("立即刷新","menuRefresh:"));menu.addItem(entry("打开后台 / 重新登录","menuLogin:"));menu.addItem(.separator())
+        menu.addItem(entry("显示看板","menuVisibility:",0,preferences.visible));menu.addItem(entry("立即刷新","menuRefresh:"));menu.addItem(entry("打开后台 / 重新登录","menuLogin:"));menu.addItem(.separator())
         let themes = NSMenuItem(title:"主题",action:nil,keyEquivalent:"");let choices = NSMenu();choices.addItem(entry("玻璃","menuTheme:",0,preferences.theme == "glass"));choices.addItem(entry("透明","menuTheme:",1,preferences.theme == "transparent"));themes.submenu = choices;menu.addItem(themes)
         menu.addItem(entry("始终置顶","menuPin:",0,preferences.on_top));menu.addItem(entry("鼠标穿透","menuPass:",0,preferences.click_through));menu.addItem(entry("看板设置","menuSettings:"));menu.addItem(.separator());menu.addItem(entry("退出","menuQuit:"));item.menu = menu
     }
-    @objc func menuShow(_ sender:Any?){show()};@objc func menuHide(_ sender:Any?){hide()};@objc func menuRefresh(_ sender:Any?){sync()};@objc func menuLogin(_ sender:Any?){sync(login:true)}
+    @objc func menuVisibility(_ sender:Any?){if preferences.visible {hide()} else {show()}};@objc func menuRefresh(_ sender:Any?){sync()};@objc func menuLogin(_ sender:Any?){sync(login:true)}
     @objc func menuTheme(_ sender:NSMenuItem){preferences.theme = sender.tag == 1 ? "transparent" : "glass";apply();save()}
     @objc func menuPin(_ sender:Any?){togglePin()};@objc func menuPass(_ sender:Any?){preferences.click_through.toggle();apply();save()}
     @objc func menuSettings(_ sender:Any?){openSettings()};@objc func menuQuit(_ sender:Any?){NSApp.terminate(nil)}

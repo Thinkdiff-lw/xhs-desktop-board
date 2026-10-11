@@ -249,8 +249,8 @@ class Application:
             return lambda *_: self.set_option(key, not self.store.get_settings()[key])
 
         menu = pystray.Menu(
-            item("显示桌面看板", lambda *_: self.set_visible(True), default=True),
-            item("隐藏桌面看板", lambda *_: self.set_visible(False)),
+            item("显示桌面看板", lambda *_: self.set_visible(not self.store.get_settings()["visible"]),
+                 checked=checked("visible")),
             item("立即刷新", lambda *_: self.sync.refresh(), enabled=lambda _: not self.sync.busy and not self.sync.paused),
             item("打开创作后台 / 重新登录", lambda *_: self.show_login()),
             pystray.Menu.SEPARATOR,

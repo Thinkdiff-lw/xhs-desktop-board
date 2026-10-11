@@ -12,8 +12,8 @@
 
 | 系统 | 安装包 | 要求 |
 | --- | --- | --- |
-| Windows | `XhsBoard-Windows-x64-v1.0.0.zip` | Windows 10/11 x64、.NET Framework 4.8、WebView2 Runtime |
-| macOS Beta | `XhsBoard-macOS-Universal-v1.0.0-Beta.zip` | macOS 13+，Apple Silicon 或 Intel |
+| Windows | `XhsBoard-Windows-x64-v1.0.1.zip` | Windows 10/11 x64、.NET Framework 4.8、WebView2 Runtime |
+| macOS Beta | `XhsBoard-macOS-Universal-v1.0.1-Beta.zip` | macOS 13+，Apple Silicon 或 Intel |
 
 Windows：完整解压到有写入权限的文件夹，双击 `XhsBoard.exe`。Mac：解压后把 `XhsBoard.app` 拖到「应用程序」，再打开。Mac 包使用临时签名，尚未经过 Apple 公证，首次打开可能需要在系统设置中允许。
 
@@ -27,6 +27,7 @@ Windows：完整解压到有写入权限的文件夹，双击 `XhsBoard.exe`。M
 - 拖动顶部移动，拖动窗口边缘调整大小；内容随宽度改变排列，放不下时使用细滚动条。
 - 深色玻璃、透明两种主题；位置和大小预设、置顶、鼠标穿透、隐藏与恢复。
 - 开机启动开关，默认关闭。Windows 不显示在任务栏及 Alt+Tab；Mac 常驻菜单栏，不显示 Dock 图标。
+- 托盘／菜单栏用单一勾选项切换显示和隐藏，关机退出后恢复最后的选择。
 - 断网和同步失败保留最后成功的数据；登录失效或需要验证时暂停自动同步。
 
 第一版展示当前累计数据，不含增长曲线、多账号、自动发文、评论回复或跨账号数据查询。
@@ -38,6 +39,7 @@ Windows：完整解压到有写入权限的文件夹，双击 `XhsBoard.exe`。M
 - [隐私、数据保存与安全分享](docs/隐私说明.md)
 - [源码结构与本地构建](docs/开发与构建.md)
 - [第三方组件](docs/第三方组件.md)
+- [更新记录](CHANGELOG.md)
 
 ## 工作方式
 
